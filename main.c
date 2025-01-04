@@ -7,10 +7,11 @@
 #include "platform.h"
 
 int main(void) {
-    SDL_Window *sdl_window = NULL;
-    SDL_Surface *sdl_surface = NULL;
+    SDL_Window *window = NULL;
+    SDL_Renderer *renderer = NULL;
+    SDL_Texture *texture = NULL;
 
-    init_platform(sdl_window, sdl_surface, 100, 50);
+    init_platform(window, renderer, texture, 400, 300, 2);
     sleep(5);
-    close_platform(sdl_window, sdl_surface);
+    close_platform(window, renderer, texture);
 }

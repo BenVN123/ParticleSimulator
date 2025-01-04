@@ -58,4 +58,7 @@ dkms.conf
 # Executables
 heheballs
 
+# LSP
+.ccls-cache/
+
 # End of https://www.toptal.com/developers/gitignore/api/c
