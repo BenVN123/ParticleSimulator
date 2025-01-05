@@ -3,10 +3,12 @@
 #include </opt/homebrew/include/SDL2/SDL.h>  // FIX: change to SDL2/SDL.h
 #include <stddef.h>
 
+#include "math.h"
 #include "physics.h"
 
 int init_platform(SDL_Window *window, SDL_Renderer *renderer,
-                  SDL_Texture *texture, int width, int height, int scale) {
+                  SDL_Texture *texture, uint32_t *buffer, int width, int height,
+                  int scale) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("sdl failed to init: %s\n", SDL_GetError());
         return 0;
@@ -33,29 +35,51 @@ int init_platform(SDL_Window *window, SDL_Renderer *renderer,
         return 0;
     }
 
+    init_gradient(buffer, width, height);
+
     return 1;
 }
 
-void clear_buffer(uint32_t *buffer, size_t len) {
-    for (int i = 0; i < len; ++i) {
+void init_gradient(uint32_t *buffer, int width, int height) {
+    // FIX: black screen instead of gradient
+    for (int row = 0; row < height; ++row) {
+        for (int col = 0; col < width; ++col) {
+            uint8_t red = (int)((row * 255) / height);
+            uint8_t green = 128;
+            uint8_t blue = (int)((col * 255) / width);
+
+            buffer[(row * width) + col] =
+                (red << 24) | (green << 16) | (blue << 8) | 0xFF;
+        }
+    }
+}
+
+void clear_buffer(uint32_t *buffer, int width, int height) {
+    // set all pixels to transparent
+    for (int i = 0; i < width * height; ++i) {
         buffer[i] &= 0xFFFFFF00;
     }
 }
 
-void draw_particle(Particle *particle, int width, int height,
-                   uint32_t *buffer) {
-    /*
-     * for pixel in particle:
-     *
-     *
-     */
-
-    pixel = ((pixel >> 0xFF) << 0xFF) | 0xFF;
+void draw_particle(Particle *particle, int width, uint32_t *buffer) {
+    // all rgb values are already preset in buffer (gradient)
+    // only alpha value is changed
+    for (int col = particle->x - particle->radius;
+         col <= particle->x + particle->radius; ++col) {
+        int y_dist =
+            (int)round(sqrt(pow(particle->radius, 2) - pow(particle->x, 2)));
+        for (int row = particle->y - y_dist; row <= particle->y + y_dist;
+             ++row) {
+            buffer[(width * row) + col] |= 0xFF;
+        }
+    }
 }
 
 void update_platform(SDL_Renderer *renderer, SDL_Texture *texture,
-                     uint32_t const *buffer, int pitch) {
-    SDL_UpdateTexture(texture, NULL, buffer, pitch);
+                     uint32_t *buffer, int width) {
+    //    clear_buffer(buffer, width, height);
+    //    FIX: remove comment when gradient is fixed
+    SDL_UpdateTexture(texture, NULL, buffer, width * sizeof(uint32_t));
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);
@@ -71,4 +95,14 @@ void close_platform(SDL_Window *window, SDL_Renderer *renderer,
     texture = NULL;
     renderer = NULL;
     window = NULL;
+}
+
+int process_event(void) {
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT) {
+            return 1;
+        }
+    }
+    return 0;
 }
