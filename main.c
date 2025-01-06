@@ -14,13 +14,16 @@ int main(void) {
     int height = 1000;
     int scale = 1;
     uint32_t *buffer = malloc(sizeof(uint32_t) * width * height);
+    size_t particle_count = 100;
+    Particle **particles = malloc(sizeof(Particle *) * particle_count);
 
     if (!init_platform(&window, &renderer, &texture, buffer, width, height,
                        scale)) {
         return -1;
     }
     while (!process_event()) {
-        update_platform(renderer, texture, buffer, width, height);
+        update_platform(renderer, texture, buffer, particles, particle_count,
+                        width, height);
     }
     close_platform(window, renderer, texture);
 

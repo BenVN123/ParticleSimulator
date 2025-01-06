@@ -59,29 +59,40 @@ void init_gradient(uint32_t *buffer, int width, int height) {
 }
 
 void clear_buffer(uint32_t *buffer, int width, int height) {
-    // set all pixels to transparent
+    // set all pixels to transparent, or black
     for (int i = 0; i < width * height; ++i) {
         buffer[i] &= 0xFFFFFF00;
     }
 }
 
-void draw_particle(Particle *particle, int width, uint32_t *buffer) {
-    // all rgb values are already preset in buffer
-    // only alpha value is changed to make the colors show
+void draw_particle(Particle *particle, uint32_t *buffer, int width) {
     for (int col = particle->x - particle->radius;
          col <= particle->x + particle->radius; ++col) {
-        int y_dist =
-            (int)round(sqrt(pow(particle->radius, 2) - pow(particle->x, 2)));
+        int y_dist = (int)round(
+            sqrt(fabs(pow(particle->radius, 2) - pow(col - particle->x, 2))));
         for (int row = particle->y - y_dist; row <= particle->y + y_dist;
              ++row) {
+            // alpha value is changed to make pixels opaque
             buffer[(width * row) + col] |= 0xFF;
         }
     }
 }
 
+void draw_multiple_particles(Particle **particles, size_t len, uint32_t *buffer,
+                             int width) {
+    for (int i = 0; i < len; ++i) {
+        draw_particle(particles[i], buffer, width);
+        printf("%d %d %d\n", particles[i]->x, particles[i]->y,
+               particles[i]->radius);
+    }
+}
+
 void update_platform(SDL_Renderer *renderer, SDL_Texture *texture,
-                     uint32_t *buffer, int width, int height) {
+                     uint32_t *buffer, Particle **particles, size_t len,
+                     int width, int height) {
     clear_buffer(buffer, width, height);
+    draw_multiple_particles(particles, len, buffer, width);
+
     SDL_UpdateTexture(texture, NULL, buffer, width * sizeof(uint32_t));
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, NULL, NULL);
