@@ -15,11 +15,15 @@ int main(void) {
     int scale = 1;
     uint32_t *buffer = malloc(sizeof(uint32_t) * width * height);
 
-    init_platform(window, renderer, texture, buffer, width, height, scale);
+    if (!init_platform(&window, &renderer, &texture, buffer, width, height,
+                       scale)) {
+        return -1;
+    }
     while (!process_event()) {
-        update_platform(renderer, texture, buffer, width);
+        update_platform(renderer, texture, buffer, width, height);
     }
     close_platform(window, renderer, texture);
 
     free(buffer);
+    return 0;
 }
