@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 #include "math.h"
-#include "physics.h"
+#include "particles.h"
 
 int init_platform(SDL_Window **window, SDL_Renderer **renderer,
                   SDL_Texture **texture, uint32_t *buffer, int width,
@@ -65,25 +65,29 @@ void clear_buffer(uint32_t *buffer, int width, int height) {
     }
 }
 
-void draw_particle(Particle *particle, uint32_t *buffer, int width) {
-    for (int col = particle->x - particle->radius;
-         col <= particle->x + particle->radius; ++col) {
+void draw_particle(Particle *particle, uint32_t *buffer, int width,
+                   int height) {
+    int x_pos = (int)round(particle->curr_pos->x);
+    int y_pos = (int)round(particle->curr_pos->y);
+    for (int col = x_pos - particle->radius; col <= x_pos + particle->radius;
+         ++col) {
         int y_dist = (int)round(
-            sqrt(fabs(pow(particle->radius, 2) - pow(col - particle->x, 2))));
-        for (int row = particle->y - y_dist; row <= particle->y + y_dist;
-             ++row) {
-            // alpha value is changed to make pixels opaque
-            buffer[(width * row) + col] |= 0xFF;
+            sqrt(fabs(pow(particle->radius, 2) - pow(col - x_pos, 2))));
+        printf("%d %d\n", x_pos, y_pos);
+        for (int row = y_pos - y_dist; row <= y_pos + y_dist; ++row) {
+            int index = (width * row) + col;
+            if (index < width * height) {
+                // alpha value is changed to make pixels opaque
+                buffer[(width * row) + col] |= 0xFF;
+            }
         }
     }
 }
 
 void draw_multiple_particles(Particle **particles, size_t len, uint32_t *buffer,
-                             int width) {
+                             int width, int height) {
     for (int i = 0; i < len; ++i) {
-        draw_particle(particles[i], buffer, width);
-        printf("%d %d %d\n", particles[i]->x, particles[i]->y,
-               particles[i]->radius);
+        draw_particle(particles[i], buffer, width, height);
     }
 }
 
@@ -91,7 +95,7 @@ void update_platform(SDL_Renderer *renderer, SDL_Texture *texture,
                      uint32_t *buffer, Particle **particles, size_t len,
                      int width, int height) {
     clear_buffer(buffer, width, height);
-    draw_multiple_particles(particles, len, buffer, width);
+    draw_multiple_particles(particles, len, buffer, width, height);
 
     SDL_UpdateTexture(texture, NULL, buffer, width * sizeof(uint32_t));
     SDL_RenderClear(renderer);
@@ -111,11 +115,17 @@ void close_platform(SDL_Window *window, SDL_Renderer *renderer,
     window = NULL;
 }
 
-int process_event(void) {
+int process_event(int *x_mouse, int *y_mouse) {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
             return 1;
+        }
+
+        uint32_t mouseState = SDL_GetMouseState(x_mouse, y_mouse);
+        if (!(mouseState & SDL_BUTTON(SDL_BUTTON_LEFT))) {
+            *x_mouse = -1;
+            *y_mouse = -1;
         }
     }
     return 0;
