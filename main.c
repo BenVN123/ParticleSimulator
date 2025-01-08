@@ -23,6 +23,7 @@ int main(void) {
     size_t p_limit = 100;
     Particle **particles = malloc(sizeof(Particle *) * p_limit);
 
+    // PERF: current code cannot handle 240 fps, lags slow each loop
     long double dt = 0.016667;  // 60 fps
     // long double dt = 0.008333;  // 120 fps;
     // long double dt = 0.004167;  // 240 fps;
@@ -38,8 +39,8 @@ int main(void) {
     clock_t curr_time;
     long double elapsed_time;
     while (!process_event(&x_mouse, &y_mouse)) {
-        // FIX: decrease allowed rate of generation or randomize the exact point
-        // of generation
+        // HACK: particles generate on top of each other. decrease allowed rate
+        // of generation or randomize the exact point of generation
         prev_time = clock();
 
         if (x_mouse != -1) {
@@ -53,11 +54,11 @@ int main(void) {
                         height);
 
         curr_time = clock();
-        elapsed_time = (long double)(curr_time - prev_time) / CLOCKS_PER_SEC;
+        elapsed_time = ((long double)(curr_time - prev_time)) / CLOCKS_PER_SEC;
         if (elapsed_time < dt) {
             usleep((dt - elapsed_time) * 1000000);
         } else {
-            printf("%Lf\n", elapsed_time - dt);
+            printf("Slow loop: %Lfs\n", elapsed_time - dt);
         }
     }
     close_platform(window, renderer, texture);
