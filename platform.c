@@ -73,7 +73,6 @@ void draw_particle(Particle *particle, uint32_t *buffer, int width,
          ++col) {
         int y_dist = (int)round(
             sqrt(fabs(pow(particle->radius, 2) - pow(col - x_pos, 2))));
-        printf("%d %d\n", x_pos, y_pos);
         for (int row = y_pos - y_dist; row <= y_pos + y_dist; ++row) {
             int index = (width * row) + col;
             if (index < width * height) {

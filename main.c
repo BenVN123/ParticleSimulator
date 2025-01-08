@@ -8,6 +8,8 @@
 #include "particles.h"
 #include "platform.h"
 int main(void) {
+    // TODO: user input for width, height, scale, radius, and fps
+
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
     SDL_Texture *texture = NULL;
@@ -16,11 +18,14 @@ int main(void) {
     int scale = 1;
     uint32_t *buffer = malloc(sizeof(uint32_t) * width * height);
 
-    float dt = 0.0001;
     int radius = 5;
     size_t p_count = 0;
     size_t p_limit = 100;
     Particle **particles = malloc(sizeof(Particle *) * p_limit);
+
+    long double dt = 0.016667;  // 60 fps
+    // long double dt = 0.008333;  // 120 fps;
+    // long double dt = 0.004167;  // 240 fps;
 
     if (!init_platform(&window, &renderer, &texture, buffer, width, height,
                        scale)) {
@@ -31,8 +36,10 @@ int main(void) {
     int y_mouse = -1;
     clock_t prev_time;
     clock_t curr_time;
-    float elapsed_time;
+    long double elapsed_time;
     while (!process_event(&x_mouse, &y_mouse)) {
+        // FIX: decrease allowed rate of generation or randomize the exact point
+        // of generation
         prev_time = clock();
 
         if (x_mouse != -1) {
@@ -46,9 +53,11 @@ int main(void) {
                         height);
 
         curr_time = clock();
-        elapsed_time = (float)(curr_time - prev_time) / CLOCKS_PER_SEC;
+        elapsed_time = (long double)(curr_time - prev_time) / CLOCKS_PER_SEC;
         if (elapsed_time < dt) {
             usleep((dt - elapsed_time) * 1000000);
+        } else {
+            printf("%Lf\n", elapsed_time - dt);
         }
     }
     close_platform(window, renderer, texture);
