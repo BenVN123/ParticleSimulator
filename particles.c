@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "utils.h"
+
 void update_particle(Particle *particle, long double dt) {
     particle->vel->x += particle->accel->x * dt;
     particle->vel->y += particle->accel->y * dt;
@@ -64,12 +66,6 @@ int check_collision(Particle *p1, Particle *p2) {
     return 0;
 }
 
-long double calculate_mass(Particle *p) { return M_PI * pow(p->radius, 2); }
-
-long double calculate_vel(Particle *p) {
-    return sqrt(pow(p->vel->x, 2) + pow(p->vel->y, 2));
-}
-
 void handle_particle_collision(Particle *p1, Particle *p2) {
     long double p1_mass = calculate_mass(p1);
     long double p2_mass = calculate_mass(p1);
@@ -85,4 +81,6 @@ void handle_particle_collision(Particle *p1, Particle *p2) {
     p1->vel->y = (p2->vel->y - y2) * LOSS_RATIO;
 }
 
-void handle_border_collision(Particle *p) { p->vel->y *= -LOSS_RATIO; }
+void handle_x_border_collision(Particle *p) { p->vel->x *= -LOSS_RATIO; }
+
+void handle_y_border_collision(Particle *p) { p->vel->y *= -LOSS_RATIO; }

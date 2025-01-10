@@ -24,7 +24,10 @@ void update_multiple_particles(Particle **particles, size_t count,
                                long double dt);
 void generate_particle(Particle ***particles, size_t *count, size_t *limit,
                        int x, int y, int radius);
+
 int check_collision(Particle *p1, Particle *p2);
-void handle_collision(Particle *p1, Particle *p2);
+void handle_particle_collision(Particle *p1, Particle *p2);
+void handle_x_border_collision(Particle *p);
+void handle_y_border_collision(Particle *p);
 
 #endif
