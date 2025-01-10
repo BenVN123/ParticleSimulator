@@ -49,7 +49,7 @@ int main(void) {
             x_mouse = -1;
             y_mouse = -1;
         }
-        update_multiple_particles(particles, p_count, dt);
+        update_multiple_particles(particles, p_count, dt, width, height);
         update_platform(renderer, texture, buffer, particles, p_count, width,
                         height);
 

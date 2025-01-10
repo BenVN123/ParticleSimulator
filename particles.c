@@ -7,21 +7,25 @@
 
 #include "utils.h"
 
-void update_particle(Particle *particle, long double dt) {
-    particle->vel->x += particle->accel->x * dt;
-    particle->vel->y += particle->accel->y * dt;
+void update_particle(Particle *particle, long double dt, int width,
+                     int height) {
+    particle->vel->x += particle->accel->x * dt * DRAG_LOSS_RATIO;
+    particle->vel->y += particle->accel->y * dt * DRAG_LOSS_RATIO;
 
     particle->curr_pos->x += particle->vel->x * dt;
     particle->curr_pos->y += particle->vel->y * dt;
 
     particle->accel->x = 0;
     particle->accel->y = GRAVITY;
+
+    handle_x_border_collision(particle, width);
+    handle_y_border_collision(particle, height);
 }
 
 void update_multiple_particles(Particle **particles, size_t count,
-                               long double dt) {
+                               long double dt, int width, int height) {
     for (int i = 0; i < count; ++i) {
-        update_particle(particles[i], dt);
+        update_particle(particles[i], dt, width, height);
     }
 }
 
@@ -54,7 +58,9 @@ void generate_particle(Particle ***particles, size_t *count, size_t *limit,
     ++(*count);
 }
 
-// TODO: implement collisions
+// TODO: implement particle collisions
+// FIX: implement inelastic collisions after the bounces are tiny, since balls
+// will bounce for every and slowly inches off the screen
 
 int check_collision(Particle *p1, Particle *p2) {
     if (p1->radius + p2->radius >
@@ -72,15 +78,25 @@ void handle_particle_collision(Particle *p1, Particle *p2) {
 
     long double x1 = p1_mass * p1->vel->x + p2_mass * p2->vel->x;
     long double x2 = p1->vel->x - p2->vel->x;
-    p2->vel->x = ((x1 + (p1_mass * x2)) / (p1_mass + p2_mass)) * LOSS_RATIO;
-    p1->vel->x = (p2->vel->x - x2) * LOSS_RATIO;
+    p2->vel->x =
+        ((x1 + (p1_mass * x2)) / (p1_mass + p2_mass)) * COLLISION_LOSS_RATIO;
+    p1->vel->x = (p2->vel->x - x2) * COLLISION_LOSS_RATIO;
 
     long double y1 = p1_mass * p1->vel->y + p2_mass * p2->vel->y;
     long double y2 = p1->vel->y - p2->vel->y;
-    p2->vel->y = ((y1 + (p1_mass * y2)) / (p1_mass + p2_mass)) * LOSS_RATIO;
-    p1->vel->y = (p2->vel->y - y2) * LOSS_RATIO;
+    p2->vel->y =
+        ((y1 + (p1_mass * y2)) / (p1_mass + p2_mass)) * COLLISION_LOSS_RATIO;
+    p1->vel->y = (p2->vel->y - y2) * COLLISION_LOSS_RATIO;
 }
 
-void handle_x_border_collision(Particle *p) { p->vel->x *= -LOSS_RATIO; }
+void handle_x_border_collision(Particle *p, int width) {
+    if (p->curr_pos->x + p->radius > width || p->curr_pos->x - p->radius < 0) {
+        p->vel->x *= -COLLISION_LOSS_RATIO;
+    }
+}
 
-void handle_y_border_collision(Particle *p) { p->vel->y *= -LOSS_RATIO; }
+void handle_y_border_collision(Particle *p, int height) {
+    if (p->curr_pos->y + p->radius > height || p->curr_pos->y - p->radius < 0) {
+        p->vel->y *= -COLLISION_LOSS_RATIO;
+    }
+}
