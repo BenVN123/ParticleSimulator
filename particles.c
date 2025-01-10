@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// TODO: detect and handle collisions
-
 void update_particle(Particle *particle, long double dt) {
     particle->vel->x += particle->accel->x * dt;
     particle->vel->y += particle->accel->y * dt;
@@ -53,3 +51,38 @@ void generate_particle(Particle ***particles, size_t *count, size_t *limit,
 
     ++(*count);
 }
+
+// TODO: implement collisions
+
+int check_collision(Particle *p1, Particle *p2) {
+    if (p1->radius + p2->radius >
+        sqrt(pow(p1->curr_pos->x - p2->curr_pos->x, 2) +
+             pow(p1->curr_pos->y - p2->curr_pos->y, 2))) {
+        return 1;
+    }
+
+    return 0;
+}
+
+long double calculate_mass(Particle *p) { return M_PI * pow(p->radius, 2); }
+
+long double calculate_vel(Particle *p) {
+    return sqrt(pow(p->vel->x, 2) + pow(p->vel->y, 2));
+}
+
+void handle_particle_collision(Particle *p1, Particle *p2) {
+    long double p1_mass = calculate_mass(p1);
+    long double p2_mass = calculate_mass(p1);
+
+    long double x1 = p1_mass * p1->vel->x + p2_mass * p2->vel->x;
+    long double x2 = p1->vel->x - p2->vel->x;
+    p2->vel->x = ((x1 + (p1_mass * x2)) / (p1_mass + p2_mass)) * LOSS_RATIO;
+    p1->vel->x = (p2->vel->x - x2) * LOSS_RATIO;
+
+    long double y1 = p1_mass * p1->vel->y + p2_mass * p2->vel->y;
+    long double y2 = p1->vel->y - p2->vel->y;
+    p2->vel->y = ((y1 + (p1_mass * y2)) / (p1_mass + p2_mass)) * LOSS_RATIO;
+    p1->vel->y = (p2->vel->y - y2) * LOSS_RATIO;
+}
+
+void handle_border_collision(Particle *p) { p->vel->y *= -LOSS_RATIO; }
