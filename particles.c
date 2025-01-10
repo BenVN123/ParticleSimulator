@@ -60,7 +60,7 @@ void generate_particle(Particle ***particles, size_t *count, size_t *limit,
 
 // TODO: implement particle collisions
 // FIX: implement inelastic collisions after the bounces are tiny, since balls
-// will bounce for every and slowly inches off the screen
+// will bounce forever and slowly inches off the screen
 
 int check_collision(Particle *p1, Particle *p2) {
     if (p1->radius + p2->radius >
