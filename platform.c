@@ -67,8 +67,8 @@ void clear_buffer(uint32_t *buffer, int width, int height) {
 
 void draw_particle(Particle *particle, uint32_t *buffer, int width,
                    int height) {
-    int x_pos = (int)round(particle->curr_pos->x);
-    int y_pos = (int)round(particle->curr_pos->y);
+    int x_pos = (int)round(particle->pos->x);
+    int y_pos = (int)round(particle->pos->y);
     for (int col = x_pos - particle->radius; col <= x_pos + particle->radius;
          ++col) {
         int y_dist = (int)round(

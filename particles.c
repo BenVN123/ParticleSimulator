@@ -7,13 +7,15 @@
 
 #include "utils.h"
 
+// TODO: implement verlet integration for more accurate simulation
+
 void update_particle(Particle *particle, long double dt, int width,
                      int height) {
-    particle->vel->x += particle->accel->x * dt * DRAG_LOSS_RATIO;
-    particle->vel->y += particle->accel->y * dt * DRAG_LOSS_RATIO;
+    particle->vel->x += particle->accel->x * dt;
+    particle->vel->y += particle->accel->y * dt;
 
-    particle->curr_pos->x += particle->vel->x * dt;
-    particle->curr_pos->y += particle->vel->y * dt;
+    particle->pos->x += particle->vel->x * dt;
+    particle->pos->y += particle->vel->y * dt;
 
     particle->accel->x = 0;
     particle->accel->y = GRAVITY;
@@ -39,13 +41,9 @@ void generate_particle(Particle ***particles, size_t *count, size_t *limit,
     (*particles)[*count] = malloc(sizeof(Particle));
     (*particles)[*count]->radius = radius;
 
-    (*particles)[*count]->curr_pos = malloc(sizeof(Vector));
-    (*particles)[*count]->curr_pos->x = x;
-    (*particles)[*count]->curr_pos->y = y;
-
-    (*particles)[*count]->prev_pos = malloc(sizeof(Vector));
-    (*particles)[*count]->prev_pos->x = x;
-    (*particles)[*count]->prev_pos->y = y;
+    (*particles)[*count]->pos = malloc(sizeof(Vector));
+    (*particles)[*count]->pos->x = x;
+    (*particles)[*count]->pos->y = y;
 
     (*particles)[*count]->vel = malloc(sizeof(Vector));
     (*particles)[*count]->vel->x = 0;
@@ -59,13 +57,10 @@ void generate_particle(Particle ***particles, size_t *count, size_t *limit,
 }
 
 // TODO: implement particle collisions
-// FIX: implement inelastic collisions after the bounces are tiny, since balls
-// will bounce forever and slowly inches off the screen
 
 int check_collision(Particle *p1, Particle *p2) {
-    if (p1->radius + p2->radius >
-        sqrt(pow(p1->curr_pos->x - p2->curr_pos->x, 2) +
-             pow(p1->curr_pos->y - p2->curr_pos->y, 2))) {
+    if (p1->radius + p2->radius > sqrt(pow(p1->pos->x - p2->pos->x, 2) +
+                                       pow(p1->pos->y - p2->pos->y, 2))) {
         return 1;
     }
 
@@ -90,13 +85,17 @@ void handle_particle_collision(Particle *p1, Particle *p2) {
 }
 
 void handle_x_border_collision(Particle *p, int width) {
-    if (p->curr_pos->x + p->radius > width || p->curr_pos->x - p->radius < 0) {
+    if (p->pos->x + p->radius > width || p->pos->x - p->radius < 0) {
         p->vel->x *= -COLLISION_LOSS_RATIO;
     }
 }
 
 void handle_y_border_collision(Particle *p, int height) {
-    if (p->curr_pos->y + p->radius > height || p->curr_pos->y - p->radius < 0) {
+    if (p->pos->y + p->radius > height || p->pos->y - p->radius < 0) {
         p->vel->y *= -COLLISION_LOSS_RATIO;
+    }
+
+    if (p->pos->y > height - p->radius) {
+        p->pos->y = height - p->radius;
     }
 }

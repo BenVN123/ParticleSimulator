@@ -4,8 +4,7 @@
 #include <stddef.h>
 
 #define GRAVITY 1000
-#define COLLISION_LOSS_RATIO 0.95
-#define DRAG_LOSS_RATIO 0.9999
+#define COLLISION_LOSS_RATIO 0.75
 
 typedef struct Vector {
     long double x;
@@ -14,10 +13,9 @@ typedef struct Vector {
 
 typedef struct Particle {
     int radius;
-    volatile Vector *curr_pos;
-    volatile Vector *prev_pos;
-    volatile Vector *vel;
-    volatile Vector *accel;
+    Vector *pos;
+    Vector *vel;
+    Vector *accel;
 } Particle;
 
 void update_particle(Particle *particle, long double dt, int width, int height);

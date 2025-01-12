@@ -7,40 +7,54 @@
 
 #include "particles.h"
 #include "platform.h"
-int main(void) {
-    // TODO: user input for width, height, scale, radius, and fps
+int main(int argc, char *argv[]) {
+    // WARN: consider limiting the areas allowed for particle generation to
+    // prevent edge cases and cut-off balls
+
+    if (argc < 5) {
+        printf(
+            "you did it wrong. use this format:\n\t./heheballs [width (int)] "
+            "[height (int)] [scale (int)] [fps (int)]\n");
+        return -1;
+    }
+
+    int width = atoi(argv[1]);
+    int height = atoi(argv[2]);
+    int scale = atoi(argv[3]);
+    int fps = atoi(argv[4]);
 
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
     SDL_Texture *texture = NULL;
-    int width = 1500;
-    int height = 1000;
-    int scale = 1;
     uint32_t *buffer = malloc(sizeof(uint32_t) * width * height);
-
-    int radius = 5;
-    size_t p_count = 0;
-    size_t p_limit = 100;
-    Particle **particles = malloc(sizeof(Particle *) * p_limit);
-
-    // PERF: current code cannot handle 240 fps, lags slow each loop
-    long double dt = 0.016667;  // 60 fps
-    // long double dt = 0.008333;  // 120 fps;
-    // long double dt = 0.004167;  // 240 fps;
 
     if (!init_platform(&window, &renderer, &texture, buffer, width, height,
                        scale)) {
         return -1;
     }
 
+    int radius = 5;
+    size_t p_count = 0;
+    size_t p_limit = 100;
+    Particle **particles = malloc(sizeof(Particle *) * p_limit);
+    long double dt = 1. / fps;
+
     int x_mouse = -1;
     int y_mouse = -1;
     clock_t prev_time;
     clock_t curr_time;
     long double elapsed_time;
+    int iter = 0;
     while (!process_event(&x_mouse, &y_mouse)) {
+        // PERF: lags slow each loop as fps becomes larger, making simulation
+        // run slow
+
         // HACK: particles generate on top of each other. decrease allowed rate
         // of generation or randomize the exact point of generation
+
+        // NOTE: consider having particles be generated at random sizes to
+        // simulate the collisions of differently-sized particles
+
         prev_time = clock();
 
         if (x_mouse != -1) {
@@ -58,8 +72,11 @@ int main(void) {
         if (elapsed_time < dt) {
             usleep((dt - elapsed_time) * 1000000);
         } else {
-            printf("Slow loop: %Lfs\n", elapsed_time - dt);
+            printf("Slow loop on iteration %d: %Lfs\n", iter,
+                   elapsed_time - dt);
         }
+
+        ++iter;
     }
     close_platform(window, renderer, texture);
 
