@@ -79,3 +79,5 @@ void update_particle_segment(Segment **segments, int scr_width, int old_x,
         }
     }
 }
+
+// TODO: implement neighboring segment collision checks

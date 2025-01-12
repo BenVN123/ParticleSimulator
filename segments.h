@@ -3,7 +3,7 @@
 
 #include "particles.h"
 
-#define SEGMENT_SIDE_LEN MAX_RADIUS + 1
+#define SEGMENT_SIDE_LEN ((MAX_RADIUS * 2) + 1)
 
 typedef struct Segment {
     Vector *pos;
