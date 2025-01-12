@@ -6,6 +6,9 @@
 #define GRAVITY 1000
 #define COLLISION_LOSS_RATIO 0.75
 
+#define MIN_RADIUS 50
+#define MAX_RADIUS 400
+
 typedef struct Vector {
     long double x;
     long double y;
