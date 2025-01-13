@@ -7,12 +7,12 @@
 
 #include "particles.h"
 
-int get_segment_row_count(int width) {
+int _get_segment_row_count(int width) {
     return ceil((float)width / (SEGMENT_SIDE_LEN));
 }
 
 Segment **generate_segments(int width, int height, int *s_count) {
-    int row_s_count = get_segment_row_count(width);
+    int row_s_count = _get_segment_row_count(width);
     *s_count = row_s_count * ceil((float)height / (SEGMENT_SIDE_LEN));
     Segment **segments = malloc(sizeof(Segment *) * (*s_count));
 
@@ -34,7 +34,7 @@ Segment **generate_segments(int width, int height, int *s_count) {
 }
 
 Segment *get_segment(Segment **segments, int width, int x, int y) {
-    return segments[((y / SEGMENT_SIDE_LEN) * get_segment_row_count(width)) +
+    return segments[((y / SEGMENT_SIDE_LEN) * _get_segment_row_count(width)) +
                     (x / SEGMENT_SIDE_LEN)];
 }
 

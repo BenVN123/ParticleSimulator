@@ -7,6 +7,8 @@
 
 #include "particles.h"
 #include "platform.h"
+#include "segments.h"
+
 int main(int argc, char *argv[]) {
     // WARN: consider limiting the areas allowed for particle generation to
     // prevent edge cases and cut-off balls
@@ -38,6 +40,9 @@ int main(int argc, char *argv[]) {
     size_t p_limit = 100;
     Particle **particles = malloc(sizeof(Particle *) * p_limit);
     long double dt = 1. / fps;
+
+    int s_count;
+    Segment **segments = generate_segments(width, height, &s_count);
 
     int x_mouse = -1;
     int y_mouse = -1;
