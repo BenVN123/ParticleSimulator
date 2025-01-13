@@ -14,7 +14,8 @@ typedef struct Segment {
 
 int get_segment_row_count(int width);
 Segment **generate_segment(int width, int height, int *s_count);
-void update_particle_segment(Segment **segments, int scr_width, int old_x,
+Segment *get_segment(Segment **segments, int width, int x, int y);
+void update_particle_segment(Segment **segments, int width, int old_x,
                              int old_y, int new_x, int new_y);
 
 #endif

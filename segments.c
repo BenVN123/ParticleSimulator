@@ -33,12 +33,14 @@ Segment **generate_segments(int width, int height, int *s_count) {
     return segments;
 }
 
-void update_particle_segment(Segment **segments, int scr_width, int old_x,
+Segment *get_segment(Segment **segments, int width, int x, int y) {
+    return segments[((y / SEGMENT_SIDE_LEN) * get_segment_row_count(width)) +
+                    (x / SEGMENT_SIDE_LEN)];
+}
+
+void update_particle_segment(Segment **segments, int width, int old_x,
                              int old_y, int new_x, int new_y) {
-    int prev_row = old_y / SEGMENT_SIDE_LEN;
-    int prev_col = old_x / SEGMENT_SIDE_LEN;
-    int prev_seg_idx = (prev_row * get_segment_row_count(scr_width)) + prev_col;
-    Segment *prev_seg = segments[prev_seg_idx];
+    Segment *prev_seg = get_segment(segments, width, old_x, old_y);
     int p_count = 0;
     Particle *curr_p;
     for (int i = 0; i < prev_seg->p_limit; ++i) {
@@ -57,10 +59,7 @@ void update_particle_segment(Segment **segments, int scr_width, int old_x,
         }
     }
 
-    int new_row = new_y / SEGMENT_SIDE_LEN;
-    int new_col = new_x / SEGMENT_SIDE_LEN;
-    int new_seg_idx = (new_row * get_segment_row_count(scr_width)) + new_col;
-    Segment *new_seg = segments[new_seg_idx];
+    Segment *new_seg = get_segment(segments, width, new_x, new_y);
     Particle *curr_new_p;
     if (new_seg->p_count < new_seg->p_limit) {
         for (int i = 0; i < new_seg->p_limit; ++i) {
