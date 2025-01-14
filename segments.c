@@ -138,7 +138,7 @@ void all_segment_checks(Segment **segments, int s_count, int width,
     int col_count = _get_segment_col_count(height);
 
     for (int i = 0; i < s_count; ++i) {
-        single_segment_check(i, row_count, col_count);
+        single_segment_check(segments, i, row_count, col_count);
     }
 }
 
