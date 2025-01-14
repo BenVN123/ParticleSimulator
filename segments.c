@@ -11,6 +11,10 @@ int _get_segment_row_count(int width) {
     return ceil((float)width / (SEGMENT_SIDE_LEN));
 }
 
+int _get_segment_col_count(int height) {
+    return ceil((float)height / (SEGMENT_SIDE_LEN));
+}
+
 Segment **generate_segments(int width, int height, int *s_count) {
     int row_s_count = _get_segment_row_count(width);
     *s_count = row_s_count * ceil((float)height / (SEGMENT_SIDE_LEN));
@@ -79,4 +83,63 @@ void update_particle_segment(Segment **segments, int width, int old_x,
     }
 }
 
-// TODO: implement neighboring segment collision checks
+void check_segment_collisions(Segment *s1, Segment *s2) {
+    int i, j = 0;
+    while (i < s1->p_count && i < s1->p_limit) {
+        while (j < s2->p_count && j < s2->p_limit) {
+            handle_particle_collision(s1->particles[i], s1->particles[j]);
+        }
+    }
+}
+
+void single_segment_check(Segment **segments, int s_idx, int row_count,
+                          int col_count) {
+    int r_idx = (s_idx + 1) % row_count;
+    int b_idx = s_idx + row_count;
+    int bl_idx = (s_idx - 1) + row_count;
+    int br_idx = s_idx + row_count + 1;
+
+    bool is_left = s_idx % row_count == 0;
+    bool is_right = (s_idx + 1) % row_count == 0;
+    bool is_bottom = (int)(s_idx / row_count) >= col_count;
+
+    Segment *s = segments[s_idx];
+
+    // check local collisions
+    int i = 0;
+    int j;
+    while (i < s->p_count && i < s->p_limit) {
+        j = i + 1;
+        while (j < s->p_count && j < s->p_limit) {
+            handle_particle_collision(s->particles[i], s->particles[j]);
+        }
+    }
+
+    if (!is_bottom) {
+        check_segment_collisions(s, segments[b_idx]);
+
+        if (!is_left) {
+            check_segment_collisions(s, segments[bl_idx]);
+        }
+
+        if (!is_right) {
+            check_segment_collisions(s, segments[br_idx]);
+        }
+    }
+
+    if (!is_right) {
+        check_segment_collisions(s, segments[r_idx]);
+    }
+}
+
+void all_segment_checks(Segment **segments, int s_count, int width,
+                        int height) {
+    int row_count = _get_segment_row_count(width);
+    int col_count = _get_segment_col_count(height);
+
+    for (int i = 0; i < s_count; ++i) {
+        single_segment_check(i, row_count, col_count);
+    }
+}
+
+// TODO: test segment collisions
