@@ -1,9 +1,9 @@
 #include "platform.h"
 
 #include </opt/homebrew/include/SDL2/SDL.h>  // FIX: change to SDL2/SDL.h
+#include <math.h>
 #include <stddef.h>
 
-#include "math.h"
 #include "particles.h"
 
 int init_platform(SDL_Window **window, SDL_Renderer **renderer,

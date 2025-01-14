@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "particles.h"
+#include "utils.h"
 
 int _get_segment_row_count(int width) {
     return ceil((float)width / (SEGMENT_SIDE_LEN));

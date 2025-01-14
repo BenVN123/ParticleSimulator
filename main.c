@@ -8,6 +8,7 @@
 #include "particles.h"
 #include "platform.h"
 #include "segments.h"
+#include "utils.h"
 
 int main(int argc, char *argv[]) {
     // WARN: consider limiting the areas allowed for particle generation to
