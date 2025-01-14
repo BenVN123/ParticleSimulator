@@ -1,16 +1,9 @@
 #ifndef __SEGMENTS__
 #define __SEGMENTS__
 
-#include "particles.h"
+#include "utils.h"
 
 #define SEGMENT_SIDE_LEN ((MAX_RADIUS * 2) + 1)
-
-typedef struct Segment {
-    Vector *pos;
-    Particle **particles;
-    int p_count;
-    int p_limit;
-} Segment;
 
 Segment **generate_segments(int width, int height, int *s_count);
 Segment *get_segment(Segment **segments, int width, int x, int y);

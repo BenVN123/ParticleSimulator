@@ -3,27 +3,19 @@
 
 #include <stddef.h>
 
+#include "utils.h"
+
 #define GRAVITY 1000
 #define COLLISION_LOSS_RATIO 0.75
 
 #define MIN_RADIUS 50
 #define MAX_RADIUS 400
 
-typedef struct Vector {
-    long double x;
-    long double y;
-} Vector;
-
-typedef struct Particle {
-    int radius;
-    Vector *pos;
-    Vector *vel;
-    Vector *accel;
-} Particle;
-
-void update_particle(Particle *particle, long double dt, int width, int height);
-void update_multiple_particles(Particle **particles, size_t count,
-                               long double dt, int width, int height);
+void update_particle(Particle *particle, Segment **segments, long double dt,
+                     int width, int height);
+void update_multiple_particles(Particle **particles, Segment **segments,
+                               size_t count, long double dt, int width,
+                               int height);
 void generate_particle(Particle ***particles, size_t *count, size_t *limit,
                        int x, int y, int radius);
 

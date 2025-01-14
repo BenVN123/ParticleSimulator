@@ -87,7 +87,9 @@ void check_segment_collisions(Segment *s1, Segment *s2) {
     int i, j = 0;
     while (i < s1->p_count && i < s1->p_limit) {
         while (j < s2->p_count && j < s2->p_limit) {
-            handle_particle_collision(s1->particles[i], s1->particles[j]);
+            if (check_collision(s1->particles[i], s2->particles[j])) {
+                handle_particle_collision(s1->particles[i], s2->particles[j]);
+            }
         }
     }
 }

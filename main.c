@@ -13,6 +13,8 @@ int main(int argc, char *argv[]) {
     // WARN: consider limiting the areas allowed for particle generation to
     // prevent edge cases and cut-off balls
 
+    // NOTE: consider using global variables
+
     if (argc < 5) {
         printf(
             "you did it wrong. use this format:\n\t./heheballs [width (int)] "
@@ -68,7 +70,10 @@ int main(int argc, char *argv[]) {
             x_mouse = -1;
             y_mouse = -1;
         }
-        update_multiple_particles(particles, p_count, dt, width, height);
+
+        all_segment_checks(segments, s_count, width, height);
+        update_multiple_particles(particles, segments, p_count, dt, width,
+                                  height);
         update_platform(renderer, texture, buffer, particles, p_count, width,
                         height);
 

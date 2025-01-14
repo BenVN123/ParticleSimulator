@@ -5,14 +5,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "segments.h"
 #include "utils.h"
 
 // TODO: implement verlet integration for more accurate simulation
 
-void update_particle(Particle *particle, long double dt, int width,
-                     int height) {
+void update_particle(Particle *particle, Segment **segments, long double dt,
+                     int width, int height) {
     particle->vel->x += particle->accel->x * dt;
     particle->vel->y += particle->accel->y * dt;
+
+    int old_x = particle->pos->x;
+    int old_y = particle->pos->y;
 
     particle->pos->x += particle->vel->x * dt;
     particle->pos->y += particle->vel->y * dt;
@@ -22,12 +26,16 @@ void update_particle(Particle *particle, long double dt, int width,
 
     handle_x_border_collision(particle, width);
     handle_y_border_collision(particle, height);
+
+    update_particle_segment(segments, width, old_x, old_y, particle->pos->x,
+                            particle->pos->y);
 }
 
-void update_multiple_particles(Particle **particles, size_t count,
-                               long double dt, int width, int height) {
+void update_multiple_particles(Particle **particles, Segment **segments,
+                               size_t count, long double dt, int width,
+                               int height) {
     for (int i = 0; i < count; ++i) {
-        update_particle(particles[i], dt, width, height);
+        update_particle(particles[i], segments, dt, width, height);
     }
 }
 
@@ -66,22 +74,20 @@ int check_collision(Particle *p1, Particle *p2) {
 }
 
 void handle_particle_collision(Particle *p1, Particle *p2) {
-    if (check_collision(p1, p2)) {
-        long double p1_mass = calculate_mass(p1);
-        long double p2_mass = calculate_mass(p1);
+    long double p1_mass = calculate_mass(p1);
+    long double p2_mass = calculate_mass(p1);
 
-        long double x1 = p1_mass * p1->vel->x + p2_mass * p2->vel->x;
-        long double x2 = p1->vel->x - p2->vel->x;
-        p2->vel->x = ((x1 + (p1_mass * x2)) / (p1_mass + p2_mass)) *
-                     COLLISION_LOSS_RATIO;
-        p1->vel->x = (p2->vel->x - x2) * COLLISION_LOSS_RATIO;
+    long double x1 = p1_mass * p1->vel->x + p2_mass * p2->vel->x;
+    long double x2 = p1->vel->x - p2->vel->x;
+    p2->vel->x =
+        ((x1 + (p1_mass * x2)) / (p1_mass + p2_mass)) * COLLISION_LOSS_RATIO;
+    p1->vel->x = (p2->vel->x - x2) * COLLISION_LOSS_RATIO;
 
-        long double y1 = p1_mass * p1->vel->y + p2_mass * p2->vel->y;
-        long double y2 = p1->vel->y - p2->vel->y;
-        p2->vel->y = ((y1 + (p1_mass * y2)) / (p1_mass + p2_mass)) *
-                     COLLISION_LOSS_RATIO;
-        p1->vel->y = (p2->vel->y - y2) * COLLISION_LOSS_RATIO;
-    }
+    long double y1 = p1_mass * p1->vel->y + p2_mass * p2->vel->y;
+    long double y2 = p1->vel->y - p2->vel->y;
+    p2->vel->y =
+        ((y1 + (p1_mass * y2)) / (p1_mass + p2_mass)) * COLLISION_LOSS_RATIO;
+    p1->vel->y = (p2->vel->y - y2) * COLLISION_LOSS_RATIO;
 }
 
 void handle_x_border_collision(Particle *p, int width) {
