@@ -87,24 +87,31 @@ void update_particle_segment(Segment **segments, int width, int old_x,
 void check_segment_collisions(Segment *s1, Segment *s2) {
     int i, j = 0;
     while (i < s1->p_count && i < s1->p_limit) {
-        while (j < s2->p_count && j < s2->p_limit) {
-            if (check_collision(s1->particles[i], s2->particles[j])) {
-                handle_particle_collision(s1->particles[i], s2->particles[j]);
+        if (s1->particles[i]->radius != 0) {
+            while (j < s2->p_count && j < s2->p_limit) {
+                if (s2->particles[i]->radius != 0) {
+                    if (check_collision(s1->particles[i], s2->particles[j])) {
+                        handle_particle_collision(s1->particles[i],
+                                                  s2->particles[j]);
+                    }
+                }
+                ++j;
             }
         }
+        ++i;
     }
 }
 
 void single_segment_check(Segment **segments, int s_idx, int row_count,
                           int col_count) {
-    int r_idx = (s_idx + 1) % row_count;
-    int b_idx = s_idx + row_count;
-    int bl_idx = (s_idx - 1) + row_count;
-    int br_idx = s_idx + row_count + 1;
+    int r_idx = (s_idx + 1) % col_count;
+    int b_idx = s_idx + col_count;
+    int bl_idx = (s_idx - 1) + col_count;
+    int br_idx = s_idx + col_count + 1;
 
-    bool is_left = s_idx % row_count == 0;
-    bool is_right = (s_idx + 1) % row_count == 0;
-    bool is_bottom = (int)(s_idx / row_count) >= col_count;
+    bool is_left = s_idx % col_count == 0;
+    bool is_right = (s_idx + 1) % col_count == 0;
+    bool is_bottom = (int)(s_idx / col_count) >= row_count - 1;
 
     Segment *s = segments[s_idx];
 
@@ -112,10 +119,16 @@ void single_segment_check(Segment **segments, int s_idx, int row_count,
     int i = 0;
     int j;
     while (i < s->p_count && i < s->p_limit) {
-        j = i + 1;
-        while (j < s->p_count && j < s->p_limit) {
-            handle_particle_collision(s->particles[i], s->particles[j]);
+        if (s->particles[i]->radius != 0) {
+            j = i + 1;
+            while (j < s->p_count && j < s->p_limit) {
+                if (s->particles[j]->radius != 0) {
+                    handle_particle_collision(s->particles[i], s->particles[j]);
+                }
+                ++j;
+            }
         }
+        ++i;
     }
 
     if (!is_bottom) {

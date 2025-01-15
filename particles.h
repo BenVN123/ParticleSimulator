@@ -9,7 +9,7 @@
 #define COLLISION_LOSS_RATIO 0.75
 
 #define MIN_RADIUS 50
-#define MAX_RADIUS 400
+#define MAX_RADIUS 50
 
 void update_particle(Particle *particle, Segment **segments, long double dt,
                      int width, int height);
