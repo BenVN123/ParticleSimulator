@@ -10,58 +10,59 @@
 
 // TODO: implement verlet integration for more accurate simulation
 
-void update_particle(Particle *particle, Segment **segments, long double dt,
-                     int width, int height) {
-    particle->vel->x += particle->accel->x * dt;
-    particle->vel->y += particle->accel->y * dt;
+void update_particle(Simulator *sim, Particle *particle) {
+    particle->vel->x += particle->accel->x * sim->dt;
+    particle->vel->y += particle->accel->y * sim->dt;
 
     int old_x = particle->pos->x;
     int old_y = particle->pos->y;
 
-    particle->pos->x += particle->vel->x * dt;
-    particle->pos->y += particle->vel->y * dt;
+    particle->pos->x += particle->vel->x * sim->dt;
+    particle->pos->y += particle->vel->y * sim->dt;
 
     particle->accel->x = 0;
     particle->accel->y = GRAVITY;
 
-    handle_x_border_collision(particle, width);
-    handle_y_border_collision(particle, height);
+    handle_x_border_collision(particle, sim->width);
+    handle_y_border_collision(particle, sim->height);
 
-    update_particle_segment(segments, width, old_x, old_y, particle->pos->x,
-                            particle->pos->y);
+    update_particle_segment(sim, particle, old_x, old_y);
 }
 
-void update_multiple_particles(Particle **particles, Segment **segments,
-                               size_t count, long double dt, int width,
-                               int height) {
-    for (int i = 0; i < count; ++i) {
-        update_particle(particles[i], segments, dt, width, height);
+void update_multiple_particles(Simulator *sim) {
+    for (int i = 0; i < sim->p_count; ++i) {
+        update_particle(sim, sim->particles[i]);
     }
 }
 
-void generate_particle(Particle ***particles, size_t *count, size_t *limit,
-                       int x, int y, int radius) {
-    if (*count == *limit) {
-        *limit = (size_t)*limit * 1.5;
-        *particles = realloc(*particles, sizeof(Particle *) * (*limit));
+void generate_particle(Simulator *sim, int x, int y, int radius) {
+    if (sim->p_count == sim->p_limit) {
+        sim->p_limit *= 1.5;
+        sim->particles =
+            realloc(sim->particles, sizeof(Particle *) * (sim->p_limit));
     }
 
-    (*particles)[*count] = malloc(sizeof(Particle));
-    (*particles)[*count]->radius = radius;
+    Particle *p = malloc(sizeof(Particle));
 
-    (*particles)[*count]->pos = malloc(sizeof(Vector));
-    (*particles)[*count]->pos->x = x;
-    (*particles)[*count]->pos->y = y;
+    p->radius = radius;
 
-    (*particles)[*count]->vel = malloc(sizeof(Vector));
-    (*particles)[*count]->vel->x = 0;
-    (*particles)[*count]->vel->y = 0;
+    p->pos = malloc(sizeof(Vector));
+    p->pos->x = x;
+    p->pos->y = y;
 
-    (*particles)[*count]->accel = malloc(sizeof(Vector));
-    (*particles)[*count]->accel->x = 0;
-    (*particles)[*count]->accel->y = GRAVITY;
+    p->vel = malloc(sizeof(Vector));
+    p->vel->x = 0;
+    p->vel->y = 0;
 
-    ++(*count);
+    p->accel = malloc(sizeof(Vector));
+    p->accel->x = 0;
+    p->accel->y = GRAVITY;
+
+    sim->particles[sim->p_count] = p;
+    ++sim->p_count;
+
+    Segment *s = get_segment(sim, x, y);
+    add_segment_particle(s, p);
 }
 
 int check_collision(Particle *p1, Particle *p2) {
@@ -73,21 +74,25 @@ int check_collision(Particle *p1, Particle *p2) {
     return 0;
 }
 
+// FIX: collision physics is wrong 😾😾😾😾
+
 void handle_particle_collision(Particle *p1, Particle *p2) {
-    long double p1_mass = calculate_mass(p1);
-    long double p2_mass = calculate_mass(p1);
+    if (check_collision(p1, p2)) {
+        long double p1_mass = calculate_mass(p1);
+        long double p2_mass = calculate_mass(p2);
 
-    long double x1 = p1_mass * p1->vel->x + p2_mass * p2->vel->x;
-    long double x2 = p1->vel->x - p2->vel->x;
-    p2->vel->x =
-        ((x1 + (p1_mass * x2)) / (p1_mass + p2_mass)) * COLLISION_LOSS_RATIO;
-    p1->vel->x = (p2->vel->x - x2) * COLLISION_LOSS_RATIO;
+        long double x1 = p1_mass * p1->vel->x + p2_mass * p2->vel->x;
+        long double x2 = p1->vel->x - p2->vel->x;
+        p2->vel->x = ((x1 + (p1_mass * x2)) / (p1_mass + p2_mass)) *
+                     COLLISION_LOSS_RATIO;
+        p1->vel->x = (p2->vel->x - x2) * COLLISION_LOSS_RATIO;
 
-    long double y1 = p1_mass * p1->vel->y + p2_mass * p2->vel->y;
-    long double y2 = p1->vel->y - p2->vel->y;
-    p2->vel->y =
-        ((y1 + (p1_mass * y2)) / (p1_mass + p2_mass)) * COLLISION_LOSS_RATIO;
-    p1->vel->y = (p2->vel->y - y2) * COLLISION_LOSS_RATIO;
+        long double y1 = p1_mass * p1->vel->y + p2_mass * p2->vel->y;
+        long double y2 = p1->vel->y - p2->vel->y;
+        p2->vel->y = ((y1 + (p1_mass * y2)) / (p1_mass + p2_mass)) *
+                     COLLISION_LOSS_RATIO;
+        p1->vel->y = (p2->vel->y - y2) * COLLISION_LOSS_RATIO;
+    }
 }
 
 void handle_x_border_collision(Particle *p, int width) {

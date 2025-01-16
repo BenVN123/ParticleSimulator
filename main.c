@@ -1,7 +1,6 @@
 #include "main.h"
 
 #include </opt/homebrew/include/SDL2/SDL.h>  // FIX: change to SDL2/SDL.h
-#include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -14,8 +13,6 @@ int main(int argc, char *argv[]) {
     // WARN: consider limiting the areas allowed for particle generation to
     // prevent edge cases and cut-off balls
 
-    // NOTE: consider using global variables
-
     if (argc < 5) {
         printf(
             "you did it wrong. use this format:\n\t./heheballs [width (int)] "
@@ -23,29 +20,24 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    int width = atoi(argv[1]);
-    int height = atoi(argv[2]);
-    int scale = atoi(argv[3]);
-    int fps = atoi(argv[4]);
+    Simulator *sim = malloc(sizeof(Simulator));
 
-    SDL_Window *window = NULL;
-    SDL_Renderer *renderer = NULL;
-    SDL_Texture *texture = NULL;
-    uint32_t *buffer = malloc(sizeof(uint32_t) * width * height);
+    sim->width = atoi(argv[1]);
+    sim->height = atoi(argv[2]);
+    sim->scale = atoi(argv[3]);
+    sim->fps = atoi(argv[4]);
 
-    if (!init_platform(&window, &renderer, &texture, buffer, width, height,
-                       scale)) {
+    if (!init_platform(sim)) {
         return -1;
     }
 
     int radius = 5;
-    size_t p_count = 0;
-    size_t p_limit = 100;
-    Particle **particles = malloc(sizeof(Particle *) * p_limit);
-    long double dt = 1. / fps;
+    sim->p_count = 0;
+    sim->p_limit = 100;
+    sim->particles = malloc(sizeof(Particle *) * sim->p_limit);
+    sim->dt = 1. / sim->fps;
 
-    int s_count;
-    Segment **segments = generate_segments(width, height, &s_count);
+    sim->segments = generate_segments(sim);
 
     int x_mouse = -1;
     int y_mouse = -1;
@@ -66,31 +58,27 @@ int main(int argc, char *argv[]) {
         prev_time = clock();
 
         if (x_mouse != -1) {
-            generate_particle(&particles, &p_count, &p_limit, x_mouse, y_mouse,
-                              radius);
+            generate_particle(sim, x_mouse, y_mouse, radius);
             x_mouse = -1;
             y_mouse = -1;
         }
 
-        all_segment_checks(segments, s_count, width, height);
-        update_multiple_particles(particles, segments, p_count, dt, width,
-                                  height);
-        update_platform(renderer, texture, buffer, particles, p_count, width,
-                        height);
+        all_segment_checks(sim);
+        update_multiple_particles(sim);
+        update_platform(sim);
 
         curr_time = clock();
         elapsed_time = ((long double)(curr_time - prev_time)) / CLOCKS_PER_SEC;
-        if (elapsed_time < dt) {
-            usleep((dt - elapsed_time) * 1000000);
+        if (elapsed_time < sim->dt) {
+            usleep((sim->dt - elapsed_time) * 1000000);
         } else {
             printf("Slow loop on iteration %d: %Lfs\n", iter,
-                   elapsed_time - dt);
+                   elapsed_time - sim->dt);
         }
 
         ++iter;
     }
-    close_platform(window, renderer, texture);
 
-    free(buffer);
+    close_platform(sim);
     return 0;
 }

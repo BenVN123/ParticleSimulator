@@ -5,68 +5,70 @@
 #include <stddef.h>
 
 #include "particles.h"
+#include "utils.h"
 
-int init_platform(SDL_Window **window, SDL_Renderer **renderer,
-                  SDL_Texture **texture, uint32_t *buffer, int width,
-                  int height, int scale) {
+int init_platform(Simulator *sim) {
+    sim->window = NULL;
+    sim->renderer = NULL;
+    sim->texture = NULL;
+    sim->buffer = malloc(sizeof(uint32_t) * sim->width * sim->height);
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("sdl failed to init: %s\n", SDL_GetError());
         return 0;
     }
 
-    *window = SDL_CreateWindow("balls simulator lolz", SDL_WINDOWPOS_UNDEFINED,
-                               SDL_WINDOWPOS_UNDEFINED, width * scale,
-                               height * scale, SDL_WINDOW_SHOWN);
-    if (*window == NULL) {
+    sim->window =
+        SDL_CreateWindow("balls simulator lolz", SDL_WINDOWPOS_UNDEFINED,
+                         SDL_WINDOWPOS_UNDEFINED, sim->width * sim->scale,
+                         sim->height * sim->scale, SDL_WINDOW_SHOWN);
+    if (sim->window == NULL) {
         printf("window could not be created: %s\n", SDL_GetError());
         return 0;
     }
 
-    *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
-    if (!*renderer) {
+    sim->renderer =
+        SDL_CreateRenderer(sim->window, -1, SDL_RENDERER_ACCELERATED);
+    if (!sim->renderer) {
         printf("renderer could not be created: %s\n", SDL_GetError());
         return 0;
     }
 
-    *texture = SDL_CreateTexture(*renderer, SDL_PIXELFORMAT_RGBA8888,
-                                 SDL_TEXTUREACCESS_STREAMING, width, height);
-    if (!*texture) {
+    sim->texture =
+        SDL_CreateTexture(sim->renderer, SDL_PIXELFORMAT_RGBA8888,
+                          SDL_TEXTUREACCESS_STREAMING, sim->width, sim->height);
+    if (!sim->texture) {
         printf("texture could not be created: %s\n", SDL_GetError());
         return 0;
     }
 
-    SDL_SetTextureBlendMode(*texture, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawBlendMode(*renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureBlendMode(sim->texture, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawBlendMode(sim->renderer, SDL_BLENDMODE_BLEND);
 
-    init_gradient(buffer, width, height);
+    // set initial buffer to a transparent gradient
+    for (int row = 0; row < sim->height; ++row) {
+        for (int col = 0; col < sim->width; ++col) {
+            uint8_t red = (int)((row * 255) / sim->height);
+            uint8_t green = 70;
+            uint8_t blue = (int)((col * 255) / sim->width);
+
+            // 0xFFFFFF00 sets initial buffer to transparent, or black
+            sim->buffer[(row * sim->width) + col] =
+                ((red << 24) | (green << 16) | (blue << 8)) & 0xFFFFFF00;
+        }
+    }
 
     return 1;
 }
 
-void init_gradient(uint32_t *buffer, int width, int height) {
-    // set initial buffer to a transparent gradient
-    for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < width; ++col) {
-            uint8_t red = (int)((row * 255) / height);
-            uint8_t green = 70;
-            uint8_t blue = (int)((col * 255) / width);
-
-            // 0xFFFFFF00 sets initial buffer to transparent, or black
-            buffer[(row * width) + col] =
-                ((red << 24) | (green << 16) | (blue << 8)) & 0xFFFFFF00;
-        }
-    }
-}
-
-void clear_buffer(uint32_t *buffer, int width, int height) {
+void clear_buffer(Simulator *sim) {
     // set all pixels to transparent, or black
-    for (int i = 0; i < width * height; ++i) {
-        buffer[i] &= 0xFFFFFF00;
+    for (int i = 0; i < sim->width * sim->height; ++i) {
+        sim->buffer[i] &= 0xFFFFFF00;
     }
 }
 
-void draw_particle(Particle *particle, uint32_t *buffer, int width,
-                   int height) {
+void draw_particle(Simulator *sim, Particle *particle) {
     int x_pos = (int)round(particle->pos->x);
     int y_pos = (int)round(particle->pos->y);
     for (int col = x_pos - particle->radius; col <= x_pos + particle->radius;
@@ -74,44 +76,41 @@ void draw_particle(Particle *particle, uint32_t *buffer, int width,
         int y_dist = (int)round(
             sqrt(fabs(pow(particle->radius, 2) - pow(col - x_pos, 2))));
         for (int row = y_pos - y_dist; row <= y_pos + y_dist; ++row) {
-            int index = (width * row) + col;
-            if (index < width * height) {
+            int index = (sim->width * row) + col;
+            if (index < sim->width * sim->height) {
                 // alpha value is changed to make pixels opaque
-                buffer[(width * row) + col] |= 0xFF;
+                sim->buffer[(sim->width * row) + col] |= 0xFF;
             }
         }
     }
 }
 
-void draw_multiple_particles(Particle **particles, size_t len, uint32_t *buffer,
-                             int width, int height) {
-    for (int i = 0; i < len; ++i) {
-        draw_particle(particles[i], buffer, width, height);
+void draw_multiple_particles(Simulator *sim) {
+    for (int i = 0; i < sim->p_count; ++i) {
+        draw_particle(sim, sim->particles[i]);
     }
 }
 
-void update_platform(SDL_Renderer *renderer, SDL_Texture *texture,
-                     uint32_t *buffer, Particle **particles, size_t len,
-                     int width, int height) {
-    clear_buffer(buffer, width, height);
-    draw_multiple_particles(particles, len, buffer, width, height);
+void update_platform(Simulator *sim) {
+    clear_buffer(sim);
+    draw_multiple_particles(sim);
 
-    SDL_UpdateTexture(texture, NULL, buffer, width * sizeof(uint32_t));
-    SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
-    SDL_RenderPresent(renderer);
+    SDL_UpdateTexture(sim->texture, NULL, sim->buffer,
+                      sim->width * sizeof(uint32_t));
+    SDL_RenderClear(sim->renderer);
+    SDL_RenderCopy(sim->renderer, sim->texture, NULL, NULL);
+    SDL_RenderPresent(sim->renderer);
 }
 
-void close_platform(SDL_Window *window, SDL_Renderer *renderer,
-                    SDL_Texture *texture) {
-    SDL_DestroyTexture(texture);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+void close_platform(Simulator *sim) {
+    SDL_DestroyTexture(sim->texture);
+    SDL_DestroyRenderer(sim->renderer);
+    SDL_DestroyWindow(sim->window);
     SDL_Quit();
 
-    texture = NULL;
-    renderer = NULL;
-    window = NULL;
+    sim->texture = NULL;
+    sim->renderer = NULL;
+    sim->window = NULL;
 }
 
 int process_event(int *x_mouse, int *y_mouse) {
