@@ -8,8 +8,8 @@
 #define GRAVITY 1000
 #define COLLISION_LOSS_RATIO 0.75
 
-#define MIN_RADIUS 50
-#define MAX_RADIUS 50
+#define MIN_RADIUS 20
+#define MAX_RADIUS 20
 
 void update_particle(Simulator *sim, Particle *particle);
 void update_multiple_particles(Simulator *sim);

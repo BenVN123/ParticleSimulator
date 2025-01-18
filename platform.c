@@ -68,8 +68,6 @@ void clear_buffer(Simulator *sim) {
     }
 }
 
-// FIX: heap overflow here......
-
 void draw_particle(Simulator *sim, Particle *particle) {
     int x_pos = (int)round(particle->pos->x);
     int y_pos = (int)round(particle->pos->y);
@@ -79,9 +77,9 @@ void draw_particle(Simulator *sim, Particle *particle) {
             sqrt(fabs(pow(particle->radius, 2) - pow(col - x_pos, 2))));
         for (int row = y_pos - y_dist; row <= y_pos + y_dist; ++row) {
             int index = (sim->width * row) + col;
-            if (index < sim->width * sim->height) {
+            if (index < sim->width * sim->height && index >= 0) {
                 // alpha value is changed to make pixels opaque
-                sim->buffer[(sim->width * row) + col] |= 0xFF;
+                sim->buffer[index] |= 0xFF;
             }
         }
     }
