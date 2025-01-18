@@ -23,10 +23,9 @@ void update_particle(Simulator *sim, Particle *particle) {
     particle->accel->x = 0;
     particle->accel->y = GRAVITY;
 
+    update_particle_segment(sim, particle, old_x, old_y);
     handle_x_border_collision(particle, sim->width);
     handle_y_border_collision(particle, sim->height);
-
-    update_particle_segment(sim, particle, old_x, old_y);
 }
 
 void update_multiple_particles(Simulator *sim) {
@@ -74,24 +73,50 @@ int check_collision(Particle *p1, Particle *p2) {
     return 0;
 }
 
-// FIX: collision physics is wrong 😾😾😾😾
+// FIX: nudge physics is wrong 😾😾😾😾
 
 void handle_particle_collision(Particle *p1, Particle *p2) {
     if (check_collision(p1, p2)) {
-        long double p1_mass = calculate_mass(p1);
-        long double p2_mass = calculate_mass(p2);
+        double p1_mass = calculate_mass(p1);
+        double p2_mass = calculate_mass(p2);
 
-        long double x1 = p1_mass * p1->vel->x + p2_mass * p2->vel->x;
-        long double x2 = p1->vel->x - p2->vel->x;
+        double x1 = p1_mass * p1->vel->x + p2_mass * p2->vel->x;
+        double x2 = p1->vel->x - p2->vel->x;
         p2->vel->x = ((x1 + (p1_mass * x2)) / (p1_mass + p2_mass)) *
                      COLLISION_LOSS_RATIO;
         p1->vel->x = (p2->vel->x - x2) * COLLISION_LOSS_RATIO;
 
-        long double y1 = p1_mass * p1->vel->y + p2_mass * p2->vel->y;
-        long double y2 = p1->vel->y - p2->vel->y;
+        double y1 = p1_mass * p1->vel->y + p2_mass * p2->vel->y;
+        double y2 = p1->vel->y - p2->vel->y;
         p2->vel->y = ((y1 + (p1_mass * y2)) / (p1_mass + p2_mass)) *
                      COLLISION_LOSS_RATIO;
         p1->vel->y = (p2->vel->y - y2) * COLLISION_LOSS_RATIO;
+
+        // nudge particle so they don't overlap
+        double x_diff = fabs(p1->pos->x - p2->pos->x);
+        double y_diff = fabs(p1->pos->y - p2->pos->y);
+        double bisect = p1->radius + p2->radius - calculate_dist(p1, p2);
+        double shift = bisect / 2;
+
+        double d_y =
+            sqrt(pow(shift, 2) / ((pow(x_diff, 2) / pow(y_diff, 2)) + 1));
+        double d_x = (x_diff / y_diff) * d_y;
+
+        if (p1->pos->x > p2->pos->x) {
+            p1->pos->x += d_x;
+            p2->pos->x -= d_x;
+        } else {
+            p1->pos->x -= d_x;
+            p2->pos->x += d_x;
+        }
+
+        if (p1->pos->y > p2->pos->y) {
+            p1->pos->y += d_y;
+            p2->pos->y -= d_y;
+        } else {
+            p1->pos->y -= d_y;
+            p2->pos->y += d_y;
+        }
     }
 }
 

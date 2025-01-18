@@ -68,6 +68,8 @@ void clear_buffer(Simulator *sim) {
     }
 }
 
+// FIX: heap overflow here......
+
 void draw_particle(Simulator *sim, Particle *particle) {
     int x_pos = (int)round(particle->pos->x);
     int y_pos = (int)round(particle->pos->y);

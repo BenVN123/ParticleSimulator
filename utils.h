@@ -5,8 +5,8 @@
 #include <stdlib.h>
 
 typedef struct Vector {
-    long double x;
-    long double y;
+    double x;
+    double y;
 } Vector;
 
 typedef struct Particle {
@@ -35,12 +35,13 @@ typedef struct Simulator {
     size_t p_count;
     size_t p_limit;
     Particle **particles;
-    long double dt;
+    double dt;
     size_t s_count;
     Segment **segments;
 } Simulator;
 
-long double calculate_mass(Particle *p);
-long double calculate_vel(Particle *p);
+double calculate_mass(Particle *p);
+double calculate_vel(Particle *p);
+double calculate_dist(Particle *p1, Particle *p2);
 
 #endif

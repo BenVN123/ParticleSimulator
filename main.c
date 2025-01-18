@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    int radius = 5;
+    int radius = 20;
     sim->p_count = 0;
     sim->p_limit = 100;
     sim->particles = malloc(sizeof(Particle *) * sim->p_limit);
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     int y_mouse = -1;
     clock_t prev_time;
     clock_t curr_time;
-    long double elapsed_time;
+    double elapsed_time;
     int iter = 0;
     while (!process_event(&x_mouse, &y_mouse)) {
         // PERF: lags slow each loop as fps becomes larger, making simulation
@@ -68,11 +68,11 @@ int main(int argc, char *argv[]) {
         update_platform(sim);
 
         curr_time = clock();
-        elapsed_time = ((long double)(curr_time - prev_time)) / CLOCKS_PER_SEC;
+        elapsed_time = ((double)(curr_time - prev_time)) / CLOCKS_PER_SEC;
         if (elapsed_time < sim->dt) {
             usleep((sim->dt - elapsed_time) * 1000000);
         } else {
-            printf("Slow loop on iteration %d: %Lfs\n", iter,
+            printf("Slow loop on iteration %d: %lfs\n", iter,
                    elapsed_time - sim->dt);
         }
 
