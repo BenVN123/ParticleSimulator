@@ -70,6 +70,8 @@ void add_segment_particle(Segment *segment, Particle *particle) {
     ++segment->p_count;
 }
 
+// FIX: not detecting some collisions
+
 // HACK: just use particle struct as argument and store old position, implement
 // with verlet
 void update_particle_segment(Simulator *sim, Particle *particle, int old_x,

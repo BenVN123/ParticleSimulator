@@ -72,7 +72,6 @@ int check_collision(Particle *p1, Particle *p2) {
 
     return 0;
 }
-
 // FIX: nudge physics is wrong 😾😾😾😾
 
 void handle_particle_collision(Particle *p1, Particle *p2) {
